@@ -1,11 +1,7 @@
 pipeline {
 
     agent{
-        pipeline {
-    agent {
         label 'built-in'
-    }
-}
     }
 
     parameters {
