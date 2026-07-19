@@ -1,0 +1,71 @@
+pipeline {
+
+    agent any
+
+    parameters {
+
+        string(
+            name: 'INSTANCE_COUNT',
+            defaultValue: '1',
+            description: 'Number of instances (same value used during creation)'
+        )
+
+        booleanParam(name: 'MYSQL', defaultValue: false)
+        booleanParam(name: 'POSTGRES', defaultValue: false)
+        booleanParam(name: 'MONGODB', defaultValue: false)
+        booleanParam(name: 'REDIS', defaultValue: false)
+        booleanParam(name: 'CASSANDRA', defaultValue: false)
+
+    }
+
+    stages {
+
+        stage('Checkout') {
+            steps {
+                checkout scm
+            }
+        }
+
+        stage('Terraform Init') {
+            steps {
+                sh 'terraform init'
+            }
+        }
+
+        stage('Terraform Destroy') {
+
+            steps {
+
+                sh """
+                terraform destroy -auto-approve \
+                -var="instance_count=${params.INSTANCE_COUNT}" \
+                -var="mysql_enabled=${params.MYSQL}" \
+                -var="postgres_enabled=${params.POSTGRES}" \
+                -var="mongodb_enabled=${params.MONGODB}" \
+                -var="redis_enabled=${params.REDIS}" \
+                -var="cassandra_enabled=${params.CASSANDRA}"
+                """
+
+            }
+
+        }
+
+    }
+
+    post {
+
+        success {
+            echo "Infrastructure destroyed successfully."
+        }
+
+        failure {
+            echo "Destroy failed."
+        }
+
+        always {
+            cleanWs()
+        }
+
+    }
+
+}
